@@ -1,0 +1,301 @@
+% VLDB-Template enhances the ACM master template, acmart.cls v2.19 (2026/06/27):
+% https://www.acm.org/publications/proceedings-template
+% The ACM Latex guide provides further information about the ACM template
+%
+% This bundle pins acmart.cls v2.19 (rather than relying on whatever version
+% ships with an author's local TeX install or Overleaf project) to guarantee
+% consistent formatting across all PVLDB submissions.
+
+\documentclass[sigconf, nonacm]{acmart}
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\usepackage{pvldb}% VLDB/PVLDB formatting overrides, see pvldb.sty for details.
+                      % Do not remove -- required for consistent proceedings
+                      % formatting across all VLDB submissions.
+%%% VLDB block end %%%
+
+%% The following must be set for each paper (values below are placeholders).
+%% Everything else (volume/issue/year defaults, the PVLDB Reference Format
+%% block, license footer, and Artifact Availability block) is handled by
+%% pvldb.sty -- see that file if you need to change shared defaults.
+\renewcommand\vldbdoi{XX.XX/XXX.XX}
+\renewcommand\vldbpages{XXX-XXX}
+% leave empty if no availability url should be set
+\renewcommand\vldbavailabilityurl{URL_TO_YOUR_ARTIFACTS} 
+
+\begin{document}
+\title{Robustness of Vision Watermark Detection Against Adversarial Attacks}
+\subtitle{DSC 261 Project Proposal}
+
+%%
+%% The "author" command and its associated commands are used to define the authors and their affiliations.
+\author{Emily Cheng}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{emc027@ucsd.edu}
+
+\author{Seongho Kim}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{sek065@ucsd.edu}
+
+\author{Paul Lai}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{holai@ucsd.edu}
+
+\author{Kevin Lin}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{kel100@ucsd.edu}
+
+\author{Samantha Lin}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{yul186@ucsd.edu}
+
+\author{Ariel Wang}
+\affiliation{
+  \institution{}
+  \city{}
+  \state{}
+  \country{}
+}
+\email{juw115@ucsd.edu}
+
+\begin{abstract}
+The increasing prevalence of AI generated images has created a need for reliable methods of identifying this content. Consequently, this has led to the rise of invisible image watermarking, allowing identifying information to be embedded into images without significantly changing their visual appearance to the human eye. However, watermark detection systems based on neural networks may be vulnerable to adversarial attacks that introduce small, carefully designed perturbations into images.
+
+This project proposes investigating the robustness of invisible image watermark detection using a pretrained ResNet50 classifier and two gradient-based adversarial attack algorithms: Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD). We will embed a custom watermark into images from the CIFAR-10 dataset and train a binary classifier to distinguish watermarked vs. unwatermarked images. We will then evaluate the classifier against FGSM and PGD attacks at different perturbation strengths, and investigate whether adversarial training improves watermark detection robustness. Performance will be measured using detection accuracy, false positive rates, attack success rates, and image quality metrics. If time allows, we will also evaluate varying watermark strengths and their effects.
+\end{abstract}
+
+\maketitle
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+% \vldbtopmatter
+%%% VLDB block end %%%
+
+\section{Introduction \& Motivation}
+The rapid development of generative AI has made it increasingly difficult to distinguish authentic digital images from AI generated or manipulated content. This raises concerns involving misinformation, copyright protection, and content authenticity. Invisible image watermarking is a potential solution for addressing these issues by embedding identifying patterns directly into digital images. Unlike visible watermarks, invisible watermarks are designed to preserve the image's original appearance to the human eye while remaining detectable through specialized algorithms. However, an important challenge is ensuring that these watermarks still remain detectable even after the image has been modified.
+
+Prior research has demonstrated that deep neural networks can be vulnerable to adversarial examples, where small pixel level perturbations cause incorrect predictions ~\cite{paper7,paper2}. Thus, it reasonably follows that a neural network trained to detect these invisible image watermarks may also be vulnerable to adversarial manipulation. The objective of this project is to study how effectively gradient based adversarial attacks can evade watermark detection and whether adversarial training can improve the reliability of these detection systems. We hypothesize that PGD will generally produce more effective adversarial examples than FGSM because of its iterative optimization process. Additionally, we expect that adversarial training will reduce attack success rates compared to standard training, and that in general, increasing watermark strength will generally improve detection robustness, at the cost of image fidelity.
+
+\section{Related Work}
+
+\textbf{Deep learning based watermarking.} Zhu et al. (2018) introduced \textit{HiDDeN: Hiding Data With Deep Networks}, demonstrating that neural networks can learn to encode and recover hidden information from images ~\cite{paper4}. Their work also investigated robustness against image transformations, such as cropping, blurring, and JPEG compression. This motivates our use of neural networks for watermark detection.
+
+\textbf{Watermarking generated images.} Wen et al. (2023) proposed \textit{Tree-Ring Watermarking}, which embeds watermarks into the initial noise used by diffusion based image generators ~\cite{paper5}. Fernandez et al. (2023) introduced \textit{Stable Signature}, which modified a latent diffusion model to produce images containing recoverable invisible signatures ~\cite{paper6}. Both studies highlight the importance of developing watermarking techniques that remain detectable after image modifications.
+
+\textbf{Adversarial attacks.} Goodfellow et al. (2015) introduced FGSM, which generates adversarial examples using the sign of the input gradient ~\cite{paper2}. Madry et al. (2018) developed a robust optimization framework that uses PGD attacks and adversarial training to improve neural network robustness ~\cite{paper3}.
+
+\textbf{Residual neural networks.} He et al. (2016) introduced ResNet, which uses residual connections to support the training of deep neural networks ~\cite{paper1}. ResNet50 will serve as the primary watermark detector in our experiments.
+
+Our project differs from these works by focusing on a simplified fixed pattern watermark and systematically evaluating the vulnerability of a ResNet50 based detector against FGSM and PGD. Rather than developing a new watermarking algorithm, we aim to investigate the robustness of a learning based detection system and evaluate potential defenses.
+
+\section{Methodology}
+\subsection{Dataset \& Preprocessing}
+We will use the CIFAR-10 dataset, which contains 60,000 RGB images across ten object categories. Each image has a resolution of 32x32 pixels in 3 RGB (red, green, blue) channels. The standard dataset consists of 50,000 training images and 10,000 testing images. CIFAR-10 was selected because it is readily available through PyTorch, has manageable computational requirements, and is easily adaptable for our needs. Images will first be normalized to pixel values between 0 and 1, and then a fixed pseudorandom watermark pattern will then be randomly added to half of the images, creating two classes (class 0: unwatermarked images, class 1: watermarked images). The resulting dataset will be used to train a binary classifier (watermark detector). Original images will be split into training, validation, and testing sets before watermarking to prevent the same source image from appearing across different partitions. We choose a 50/50 split for a balanced dataset. For adversarial attacks, we will utilize a paired test method (original and watermarked versions of the image) to isolate and evaluate the effect of watermarking and adversarial perturbations.
+
+\subsection{Invisible Watermark Generation}
+We will implement a simple additive watermarking algorithm.
+Let the original image be:
+\[
+    x \in [0,1]^{3 \times 32 \times 32}
+\]
+Let the watermark pattern be:
+\[
+    W \in \{-1, +1\}^{3 \times 32 \times 32}
+\]
+Then our watermarked image is consequently:
+\[
+    x_W = x + \lambda W, \quad x_W \in [0, 1]
+\]
+$\lambda$ controls watermark strength, and final values for $x_W$ are clipped to ensure valid pixel values in $[0, 1]$. We will experiment with different values of $\lambda$ to investigate the tradeoff between watermark visibility and detection robustness. This additive method is intended to serve as a controlled experimental baseline rather than a production level watermarking system.
+
+\subsection{ResNet50 Watermark Detector}
+We will use the pretrained ResNet50 ImageNet architecture with its final classification layer modified to predict two classes instead of the original 10 ImageNet classes. We will train the model for 15 epochs, utilizing a stochastic gradient optimizer with learning rate 0.001 and momentum of 0.9 with cross entropy loss. This may be adjusted based on model performance.
+
+\subsection{FGSM Adversarial Attack}
+FGSM generates adversarial examples by taking a single gradient step in the direction that increases classification loss. This can be defined as:
+\[
+    x_{\mathrm{adv}} = x_w + \epsilon \operatorname{sign}(\nabla_{x_w}L(f_\theta(x_w),y)), \quad x_{\mathrm{adv}} \in [0, 1]
+\]
+where $x_w$ is the watermarked image, $\epsilon$ is the maximum allowed perturbation (attack strength), $L$ is the classification loss, and $\nabla_{x_w}L$ is the gradient with respect to the input image. Please see Goodfellow et al. (2015) for more information ~\cite{paper2}.
+
+\subsection{PGD Adversarial Attack}
+PGD extends upon FGSM by applying multiple gradient updates while constraining the perturbation to a specified norm bounded region. The iterative update now is:
+\[
+    x^{t + 1} = \Pi_{B_\epsilon(x_w)\cap[0, 1]^d}\left(x^t + \alpha\operatorname{sign}\left(\nabla_{x^t}L(f_\theta(x^t),y)\right)\right)
+\]
+where $\alpha$ is the step size, $t$ is the iteration number, $\Pi$ denotes the projection onto the allowed perturbation region, and $B_\epsilon(x_w)$ is the $L_\infty$ ball centered at the original watermarked image. Please see Madry et al. (2018) for more information ~\cite{paper3}.
+
+\subsection{Adversarial Training}
+We will investigate whether training on adversarial examples improves the watermark detector's robustness. The only difference from the initial training of the ResNet50 model is that we find the adversarial noise using an attack (based on adversarial strategy) and add it to the input before training with it. We will compare three training strategies:
+\begin{enumerate}
+    \item Standard training using clean and watermarked images.
+    \item FGSM-based adversarial training.
+    \item PGD-based adversarial training.
+\end{enumerate}
+All three models will be evaluated based on the same held out test images.
+
+\section{Evaluation \& Expected Results}
+We will first evaluate the watermark detector before adversarial attacks using accuracy, true positive rate (TPR), false positive rate (FPR), and precision and recall. Then, we will apply FGSM and PGD attacks at several perturbation budgets (TBD), and evaluate based on the attack success rate of whether an initially detected watermarked image classified as clean after the attack over the total number of correctly detected watermarked images. Similar methods will be applied while modifying watermark strength.
+
+We expect watermark detection accuracy to decrease as adversarial perturbation strength increases. Since PGD uses multiple gradient steps, we hypothesize that it will generally be more effective than FGSM at evading watermark detection. Similarly, we expect adversarially trained detectors to be more resistant to these attacks than conventionally trained detectors. Lastly, we also expect stronger watermark patterns to improve detection robustness at a tradeoff of image fidelity. 
+
+\section{Collaboration Plan}
+\begin{table}[hb]% h asks to places the floating element [h]ere.
+  \begin{tabular}{cl}
+    \toprule
+    Member & Part\\
+    \midrule
+    Paul & Data handling, ResNet50 model training \\
+    Kevin & Watermarking, model evaluation \\
+    Emily & FGSM \\
+    Seongho & PGD \\
+    Samantha & Adversarial training \\
+    Ariel & Adversarial model evaluation \\
+  \bottomrule
+\end{tabular}
+\end{table}
+All team members worked together on the project proposal, and will collaborate on all aspects moving forward on the project (midterm review, final presentation, etc.). The above table is the suggested initial main split of responsibilities, but all team members will contribute and help as needed. 
+
+% \subsection{Figures}
+
+% Aliquam justo ante, pretium vel mollis sed, consectetur accumsan nibh. Nulla sit amet sollicitudin est. Etiam ullamcorper diam a sapien lacinia faucibus. Duis vulputate, nisl nec tincidunt volutpat, erat orci eleifend diam, eget semper risus est eget nisl. Donec non odio id neque pharetra ultrices sit amet id purus. Nulla non dictum tellus, id ullamcorper libero. Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim. Cras fermentum facilisis elit vitae egestas. Nam vulputate est non tellus efficitur pharetra. Vestibulum ligula est, varius in suscipit vel, porttitor id massa. Nulla placerat feugiat augue, id blandit urna pretium nec. Nulla velit sem, tempor vel mauris ut, porta commodo quam \autoref{fig:duck}.
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=\linewidth]{figures/duck}
+%   \caption{An illustration of a Mallard Duck. Picture from Mabel Osgood Wright, \textit{Birdcraft}, published 1897.}
+%   \Description{A hand-drawn illustration of a mallard duck standing in profile.}
+%   \label{fig:duck}
+% \end{figure}
+
+% \begin{table*}[t]
+%   \caption{A double column table.}
+%   \label{tab:commands}
+%   \begin{tabular}{ccl}
+%     \toprule
+%     A Wide Command Column & A Random Number & Comments\\
+%     \midrule
+%     \verb|\tabular| & 100& The content of a table \\
+%     \verb|\table|  & 300 & For floating tables within a single column\\
+%     \verb|\table*| & 400 & For wider floating tables that span two columns\\
+%     \bottomrule
+%   \end{tabular}
+% \end{table*}
+
+% \subsection{Tables}
+
+% Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim. Cras fermentum facilisis elit vitae egestas. Mauris porta, neque non rutrum efficitur, odio odio faucibus tortor, vitae imperdiet metus quam vitae eros. Proin porta dictum accumsan \autoref{tab:commands}.
+
+% Duis cursus maximus facilisis. Integer euismod, purus et condimentum suscipit, augue turpis euismod libero, ac porttitor tellus neque eu enim. Nam vulputate est non tellus efficitur pharetra. Aenean molestie tristique venenatis. Nam congue pulvinar vehicula. Duis lacinia mollis purus, ac aliquet arcu dignissim ac \autoref{tab:freq}. 
+
+% \begin{table}[hb]% h asks to places the floating element [h]ere.
+%   \caption{Frequency of Special Characters}
+%   \label{tab:freq}
+%   \begin{tabular}{ccl}
+%     \toprule
+%     Non-English or Math & Frequency & Comments\\
+%     \midrule
+%     \O & 1 in 1000& For Swedish names\\
+%     $\pi$ & 1 in 5 & Common in math\\
+%     \$ & 4 in 5 & Used in business\\
+%     $\Psi^2_1$ & 1 in 40\,000 & Unexplained usage\\
+%   \bottomrule
+% \end{tabular}
+% \end{table}
+
+% Nulla sit amet enim tortor. Ut non felis lectus. Aenean quis felis faucibus, efficitur magna vitae. Curabitur ut mauris vel augue tempor suscipit eget eget lacus. Sed pulvinar lobortis dictum. Aliquam dapibus a velit.
+
+% \subsection{Listings and Styles}
+
+% Aenean malesuada fringilla felis, vel hendrerit enim feugiat et. Proin dictum ante nec tortor bibendum viverra. Curabitur non nibh ut mauris egestas ultrices consequat non odio.
+
+% \begin{itemize}
+% \item Duis lacinia mollis purus, ac aliquet arcu dignissim ac. Vivamus accumsan sollicitudin dui, sed porta sem consequat.
+% \item Curabitur ut mauris vel augue tempor suscipit eget eget lacus. Sed pulvinar lobortis dictum. Aliquam dapibus a velit.
+% \item Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim.
+% \end{itemize}
+
+% Ut sagittis, massa nec rhoncus dignissim, urna ipsum vestibulum odio, ac dapibus massa lorem a dui. Nulla sit amet enim tortor. Ut non felis lectus. Aenean quis felis faucibus, efficitur magna vitae. 
+
+% \begin{enumerate}
+% \item Duis lacinia mollis purus, ac aliquet arcu dignissim ac. Vivamus accumsan sollicitudin dui, sed porta sem consequat.
+% \item Curabitur ut mauris vel augue tempor suscipit eget eget lacus. Sed pulvinar lobortis dictum. Aliquam dapibus a velit.
+% \item Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim.
+% \end{enumerate}
+
+% Cras fermentum facilisis elit vitae egestas. Mauris porta, neque non rutrum efficitur, odio odio faucibus tortor, vitae imperdiet metus quam vitae eros. Proin porta dictum accumsan. Aliquam dapibus a velit. Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim. Ut maximus mi id arcu ultricies feugiat. Phasellus facilisis purus ac ipsum varius bibendum.
+
+% \subsection{Math and Equations}
+
+% Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim. Cras fermentum facilisis elit vitae egestas. Nam vulputate est non tellus efficitur pharetra. Vestibulum ligula est, varius in suscipit vel, porttitor id massa. Cras facilisis suscipit orci, ac tincidunt erat.
+% \begin{equation}
+%   \lim_{n\rightarrow \infty}x=0
+% \end{equation}
+
+% Sed pulvinar lobortis dictum. Aliquam dapibus a velit porttitor ultrices. Ut maximus mi id arcu ultricies feugiat. Phasellus facilisis purus ac ipsum varius bibendum. Aenean a quam at massa efficitur tincidunt facilisis sit amet felis. 
+% \begin{displaymath}
+%   \sum_{i=0}^{\infty} x + 1
+% \end{displaymath}
+
+% Suspendisse molestie ultricies tincidunt. Praesent metus ex, tempus quis gravida nec, consequat id arcu. Donec maximus fermentum nulla quis maximus.
+% \begin{equation}
+%   \sum_{i=0}^{\infty}x_i=\int_{0}^{\pi+2} f
+% \end{equation}
+
+% Curabitur vitae nulla dapibus, ornare dolor in, efficitur enim. Cras fermentum facilisis elit vitae egestas. Nam vulputate est non tellus efficitur pharetra. Vestibulum ligula est, varius in suscipit vel, porttitor id massa. Cras facilisis suscipit orci, ac tincidunt erat.
+
+% \section{Citations}
+
+% Some examples of references. A paginated journal article~\cite{Abril07}, an enumerated journal article~\cite{Cohen07}, a reference to an entire issue~\cite{JCohen96}, a monograph (whole book) ~\cite{Kosiur01}, a monograph/whole book in a series (see 2a in spec. document)~\cite{Harel79}, a divisible-book such as an anthology or compilation~\cite{Editor00} followed by the same example, however we only output the series if the volume number is given~\cite{Editor00a} (so Editor00a's series should NOT be present since it has no vol. no.), a chapter in a divisible book~\cite{Spector90}, a chapter in a divisible book in a series~\cite{Douglass98}, a multi-volume work as book~\cite{Knuth97}, an article in a proceedings (of a conference, symposium, workshop for example) (paginated proceedings article)~\cite{Andler79}, a proceedings article with all possible elements~\cite{Smith10}, an example of an enumerated proceedings article~\cite{VanGundy07}, an informally published work~\cite{Harel78}, a doctoral dissertation~\cite{Clarkson85}, a master's thesis~\cite{anisi03}, an finally two online documents or world wide web resources~\cite{Thornburg01, Ablamowicz07}.
+
+% \begin{acks}
+%  This work was supported by the [...] Research Fund of [...] (Number [...]). Additional funding was provided by [...] and [...]. We also thank [...] for contributing [...].
+% \end{acks}
+
+% \clearpage
+\nocite{*}
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference}
+
+% [1] He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image recognition. Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 770–778. https://doi.org/10.1109/CVPR.2016.90
+
+% [2] Goodfellow, I. J., Shlens, J., & Szegedy, C. (2015). Explaining and harnessing adversarial examples. International Conference on Learning Representations (ICLR). https://arxiv.org/abs/1412.6572
+
+% [3] Madry, A., Makelov, A., Schmidt, L., Tsipras, D., & Vladu, A. (2018). Towards deep learning models resistant to adversarial attacks. International Conference on Learning Representations (ICLR). https://arxiv.org/abs/1706.06083
+
+% [4] Zhu, J., Kaplan, R., Johnson, J., & Fei-Fei, L. (2018). HiDDeN: Hiding data with deep networks. Proceedings of the European Conference on Computer Vision (ECCV). https://doi.org/10.1007/978-3-030-01267-0_40
+
+% [5] Wen, Y., Kirchenbauer, J., Geiping, J., & Goldstein, T. (2023). Tree-Rings Watermarks: Invisible fingerprints for diffusion images. Advances in Neural Information Processing Systems, 36.https://papers.nips.cc/paper_files/paper/2023/hash/b54d1757c190ba20dbc4f9e4a2f54149-Abstract-Conference.html
+
+% [6] Fernandez, P., Couairon, G., Jégou, H., Douze, M., & Furon, T. (2023). The Stable Signature: Rooting watermarks in latent diffusion models. Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), 22466–22477. https://doi.org/10.1109/ICCV51070.2023.02053
+
+\noindent\textbf{AI Usage:} This project proposal was compiled in Overleaf with assistance from ChatGPT for prose, grammar, and clarity.
+
+\end{document}
+\endinput
